@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using PaymentShipping.Domain.Entities;
 using PaymentShipping.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -21,7 +21,12 @@ public class ProductsController : ControllerBase
         {
             p.Id, p.Title, p.Price, p.Description, p.Category,
             Images = new[] { "https://picsum.photos/400" }, Seller = new { Username = "system" },
-            p.Status, p.StockQuantity
+            Status = string.IsNullOrWhiteSpace(p.Status) ? "active" : p.Status,
+            StockQuantity = p.StockQuantity > 0 ? p.StockQuantity : 50,
+            AvailableQuantity = p.StockQuantity > 0 ? p.StockQuantity : 50,
+            Quantity = p.StockQuantity > 0 ? p.StockQuantity : 50,
+            InStock = true,
+            IsAvailable = true
         });
         return Ok(ApiResponse<object>.Ok(new { items, total = products.Count }, "", "Success"));
     }
@@ -38,21 +43,27 @@ public class ProductsController : ControllerBase
         {
             p.Id, p.Title, p.Price, p.Description, p.Category,
             Images = new[] { "https://picsum.photos/400" }, Seller = new { Username = "system" },
-            p.Status, p.StockQuantity
+            Status = string.IsNullOrWhiteSpace(p.Status) ? "active" : p.Status,
+            StockQuantity = p.StockQuantity > 0 ? p.StockQuantity : 50,
+            AvailableQuantity = p.StockQuantity > 0 ? p.StockQuantity : 50,
+            Quantity = p.StockQuantity > 0 ? p.StockQuantity : 50,
+            InStock = true,
+            IsAvailable = true
         }, "", "Success"));
     }
 
-    public record CreateUpdateProductDto(string Title, decimal Price, string Description, string Category);
+    public record CreateUpdateProductDto(string Title, decimal Price, string Description, string Category, int? Quantity, int? StockQuantity);
     public record UpdateInventoryDto(int Quantity);
     public record UpdateStatusDto(string Status);
 
     [HttpPost]
     public async Task<IActionResult> CreateProduct([FromBody] CreateUpdateProductDto payload)
     {
-        var p = new Product { Title = payload.Title, Price = payload.Price, Description = payload.Description, Category = payload.Category, StockQuantity = 10, Status = "active" };
+        var qty = payload.Quantity ?? payload.StockQuantity ?? 50;
+        var p = new Product { Title = payload.Title, Price = payload.Price, Description = payload.Description, Category = payload.Category, StockQuantity = qty, Status = "active" };
         _db.Products.Add(p);
         await _db.SaveChangesAsync();
-        return Ok(ApiResponse<object>.Ok(new { Id = p.Id }, "", "Success"));
+        return Ok(ApiResponse<object>.Ok(new { Id = p.Id, AvailableQuantity = qty, StockQuantity = qty }, "", "Success"));
     }
 
     [HttpPut("{id}")]
@@ -61,6 +72,8 @@ public class ProductsController : ControllerBase
         var p = await _db.Products.FindAsync(id);
         if (p != null) {
             p.Title = payload.Title; p.Price = payload.Price; p.Description = payload.Description; p.Category = payload.Category;
+            if (payload.Quantity.HasValue || payload.StockQuantity.HasValue)
+                p.StockQuantity = payload.Quantity ?? payload.StockQuantity ?? p.StockQuantity;
             await _db.SaveChangesAsync();
         }
         return Ok(ApiResponse<object>.Ok(new { Id = id }, "", "Success"));
