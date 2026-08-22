@@ -191,15 +191,13 @@ const ProductDetailPage = () => {
       setBuyingNow(true);
 
       const addresses = await getMyAddresses();
-      if (!addresses.length) {
-        showError('You need to create a shipping address before placing an order.');
-        navigate(`/addresses?redirect=/products/${product.id}`);
-        return;
+      let selectedAddressId = getSelectedShippingAddressId();
+      if (!selectedAddressId && addresses && addresses.length > 0) {
+        selectedAddressId = addresses[0].id;
       }
 
-      const selectedAddressId = getSelectedShippingAddressId();
-      if (!selectedAddressId) {
-        showError('Please select a shipping address before placing an order.');
+      if (!selectedAddressId && (!addresses || !addresses.length)) {
+        showError('You need to create a shipping address before placing an order.');
         navigate(`/addresses?redirect=/products/${product.id}`);
         return;
       }
