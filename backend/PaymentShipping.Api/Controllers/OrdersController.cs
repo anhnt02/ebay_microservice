@@ -63,14 +63,29 @@ public sealed class OrdersController : BaseController
     }
 
     [HttpPost("{id}/pay")]
-    public IActionResult PayOrder(int id)
+    public async Task<IActionResult> PayOrder(int id, [FromServices] PaymentShipping.Application.Payments.IPaymentService paymentService, CancellationToken ct)
     {
-        return Ok(ApiResponse<object>.Ok(new { Id = id, Status = "paid", Message = "Payment simulated successfully", PaypalOrderId = $"PAYPAL-{Guid.NewGuid()}" }, CurrentCorrelationId, "Paid"));
+        var req = new PaymentShipping.Contracts.Payments.ProcessPaymentRequest(id, "paypal");
+        var result = await paymentService.ProcessAsync(CurrentUserId, req, ct);
+        // The frontend expects PaypalOrderId in the response to open the popup.
+        return Ok(ApiResponse<object>.Ok(new { Id = id, Status = "paid", Message = "Payment simulated successfully", PaypalOrderId = result.TransactionId ?? $"PAYPAL-{Guid.NewGuid()}" }, CurrentCorrelationId, "Paid"));
     }
 
     [HttpPost("{id}/pay/capture")]
-    public IActionResult CapturePayPalOrder(int id, [FromBody] object payload)
+    public async Task<IActionResult> CapturePayPalOrder(int id, [FromBody] System.Text.Json.JsonElement payload, [FromServices] PaymentShipping.Application.Payments.IPaymentService paymentService, CancellationToken ct)
     {
+        string? paypalOrderId = null;
+        if (payload.TryGetProperty("paypalOrderId", out var prop))
+        {
+            paypalOrderId = prop.GetString();
+        }
+        
+        if (string.IsNullOrEmpty(paypalOrderId))
+        {
+            return BadRequest(ApiResponse<object>.Error(new[] { new ApiError("paypalOrderId is required", "BAD_REQUEST") }, CurrentCorrelationId));
+        }
+
+        var result = await paymentService.CapturePayPalAsync(CurrentUserId, id, paypalOrderId, ct);
         return Ok(ApiResponse<object>.Ok(new { Id = id, Status = "paid", Message = "PayPal payment captured" }, CurrentCorrelationId, "Captured"));
     }
 
