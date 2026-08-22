@@ -80,6 +80,7 @@ public sealed class OrderService : IOrderService
         // Calculate pricing
         var pricing = await CalculatePricingAsync(buyerId, address, req.Items, products, req.CouponCode, ct);
 
+        int generatedOrderId = 0;
         var strategy = _db.Database.CreateExecutionStrategy();
         await strategy.ExecuteAsync(async () =>
         {
@@ -146,6 +147,7 @@ public sealed class OrderService : IOrderService
 
             _db.Orders.Add(order);
             await _db.SaveChangesAsync(ct);
+            generatedOrderId = order.Id;
 
             // Add order items
             foreach (var item in req.Items)
@@ -189,9 +191,9 @@ public sealed class OrderService : IOrderService
 
         _logger.LogInformation(
             "CreateOrder succeeded | cid={cid} | tx={tx} | orderId={orderId} | total={total}",
-            _txContext.CorrelationId, _txContext.TransactionId, order.Id, pricing.GrandTotal);
+            _txContext.CorrelationId, _txContext.TransactionId, generatedOrderId, pricing.GrandTotal);
 
-        return await GetByIdAsync(buyerId, order.Id, ct);
+        return await GetByIdAsync(buyerId, generatedOrderId, ct);
     }
 
     public async Task<OrderTotalDto> CalculateAsync(int buyerId, CalculateOrderRequest req, CancellationToken ct = default)
