@@ -89,7 +89,7 @@ public sealed class GlobalExceptionMiddleware
             default:
                 statusCode = (int)HttpStatusCode.InternalServerError;
                 code       = "INTERNAL_ERROR";
-                message    = "An unexpected error occurred.";
+                message    = $"An unexpected error occurred: {ex.Message}";
                 break;
         }
 
