@@ -82,7 +82,7 @@ public sealed class OrdersController : BaseController
         
         if (string.IsNullOrEmpty(paypalOrderId))
         {
-            return BadRequest(ApiResponse<object>.Error(new[] { new ApiError("paypalOrderId is required", "BAD_REQUEST") }, CurrentCorrelationId));
+            return BadRequest(ApiResponse<object>.Fail("paypalOrderId is required", "BAD_REQUEST", CurrentCorrelationId));
         }
 
         var result = await paymentService.CapturePayPalAsync(CurrentUserId, id, paypalOrderId, ct);
