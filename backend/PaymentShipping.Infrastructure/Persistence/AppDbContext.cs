@@ -213,9 +213,9 @@ public class AppDbContext : DbContext
 
         // Seed products for testing
         modelBuilder.Entity<Product>().HasData(
-            new Product { Id = 1, Title = "iPhone 15 Pro", Description = "Apple iPhone 15 Pro 256GB", Price = 999.00m, Category = "Electronics", StockQuantity = 50, Status = "active" },
-            new Product { Id = 2, Title = "Samsung Galaxy S24", Description = "Samsung Galaxy S24 128GB", Price = 799.00m, Category = "Electronics", StockQuantity = 30, Status = "active" },
-            new Product { Id = 3, Title = "Sony WH-1000XM5", Description = "Sony Noise Cancelling Headphones", Price = 299.00m, Category = "Audio", StockQuantity = 100, Status = "active" }
+            new Product { Id = 1, SellerId = 2, Title = "iPhone 15 Pro", Description = "Apple iPhone 15 Pro 256GB", Price = 999.00m, Category = "Electronics", StockQuantity = 50, Status = "active" },
+            new Product { Id = 2, SellerId = 2, Title = "Samsung Galaxy S24", Description = "Samsung Galaxy S24 128GB", Price = 799.00m, Category = "Electronics", StockQuantity = 30, Status = "active" },
+            new Product { Id = 3, SellerId = 2, Title = "Sony WH-1000XM5", Description = "Sony Noise Cancelling Headphones", Price = 299.00m, Category = "Audio", StockQuantity = 100, Status = "active" }
         );
 
         // Seed coupon

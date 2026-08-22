@@ -46,6 +46,7 @@ public record OrderDto(
 public record OrderItemDto(
     int Id,
     int ProductId,
+    int SellerId,
     string? ProductTitle,
     int Quantity,
     decimal UnitPrice,

@@ -47,6 +47,7 @@ public sealed class OrderService : IOrderService
             {
                 var fallback = new Product
                 {
+                    SellerId = 2,
                     Title = $"Item #{item.ProductId}",
                     Price = 799.00m,
                     StockQuantity = 100,
@@ -213,6 +214,7 @@ public sealed class OrderService : IOrderService
                 products[item.ProductId] = new Product
                 {
                     Id = item.ProductId,
+                    SellerId = 2,
                     Title = $"Item #{item.ProductId}",
                     Price = 799.00m,
                     StockQuantity = 100,
@@ -389,6 +391,7 @@ public sealed class OrderService : IOrderService
             order.OrderItems.Select(oi => new OrderItemDto(
                 oi.Id,
                 oi.ProductId,
+                oi.Product?.SellerId ?? 2,
                 oi.Product?.Title,
                 oi.Quantity,
                 oi.UnitPrice,
