@@ -19,7 +19,7 @@ public class ProductsController : BaseController
         var products = await _db.Products.ToListAsync();
         var items = products.Select(p => new
         {
-            p.Id, p.Title, p.Price, p.Description, p.Category,
+            p.Id, p.Title, p.Price, p.Description, p.Category, p.SellerId,
             Images = new[] { "https://picsum.photos/400" }, Seller = new { Id = p.SellerId, Username = "Seller" },
             Status = string.IsNullOrWhiteSpace(p.Status) ? "active" : p.Status,
             StockQuantity = p.StockQuantity > 0 ? p.StockQuantity : 50,
@@ -41,7 +41,7 @@ public class ProductsController : BaseController
         if (p == null) return NotFound();
         return Ok(ApiResponse<object>.Ok(new
         {
-            p.Id, p.Title, p.Price, p.Description, p.Category,
+            p.Id, p.Title, p.Price, p.Description, p.Category, p.SellerId,
             Images = new[] { "https://picsum.photos/400" }, Seller = new { Id = p.SellerId, Username = "Seller" },
             Status = string.IsNullOrWhiteSpace(p.Status) ? "active" : p.Status,
             StockQuantity = p.StockQuantity > 0 ? p.StockQuantity : 50,
@@ -328,11 +328,30 @@ public class SellerController : BaseController
     }
 
     [HttpPost("orders/{orderId}/processing")]
-    public IActionResult MarkProcessing(int orderId) => Ok(ApiResponse<object>.Ok(new { Id = orderId, Status = "processing" }, "", "Order marked as processing"));
+    public async Task<IActionResult> MarkProcessing(int orderId)
+    {
+        var o = await _db.Orders.FindAsync(orderId);
+        if (o == null) return NotFound();
+        o.Status = "processing";
+        await _db.SaveChangesAsync();
+        return Ok(ApiResponse<object>.Ok(new { Id = orderId, Status = "processing" }, "", "Order marked as processing"));
+    }
 
     [HttpPost("orders/{orderId}/ship")]
-    public IActionResult ShipOrder(int orderId, [FromBody] object payload) => Ok(ApiResponse<object>.Ok(new { Id = orderId, Status = "shipped" }, "", "Order marked as shipped"));
+    public async Task<IActionResult> ShipOrder(int orderId, [FromBody] PaymentShipping.Contracts.Shipping.CreateShipmentRequest payload, [FromServices] PaymentShipping.Application.Shipping.IShippingService shipping)
+    {
+        var result = await shipping.CreateShipmentAsync(orderId, payload);
+        return Ok(ApiResponse<object>.Ok(result, "", "Order marked as shipped"));
+    }
 
     [HttpPost("orders/{orderId}/mock-status")]
-    public IActionResult MockStatus(int orderId, [FromBody] object payload) => Ok(ApiResponse<object>.Ok(new { Id = orderId, Status = "delivered" }, "", "Mock shipment updated"));
+    public async Task<IActionResult> MockStatus(int orderId, [FromBody] PaymentShipping.Contracts.Shipping.UpdateShipmentStatusRequest payload, [FromServices] PaymentShipping.Application.Shipping.IShippingService shipping)
+    {
+        var s = await _db.ShippingInfos.FirstOrDefaultAsync(x => x.OrderId == orderId);
+        if (s == null) return NotFound("Shipping info not found for this order");
+        
+        var req = payload with { ShippingInfoId = s.Id };
+        var result = await shipping.UpdateStatusAsync(req);
+        return Ok(ApiResponse<object>.Ok(result, "", "Mock shipment updated"));
+    }
 }
