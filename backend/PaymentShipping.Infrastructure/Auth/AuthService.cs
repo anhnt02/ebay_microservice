@@ -68,11 +68,11 @@ public sealed class AuthService : IAuthService
             "Register succeeded | cid={cid} | tx={tx} | userId={userId}",
             _txContext.CorrelationId, _txContext.TransactionId, user.Id);
 
-        _ = _email.SendAsync(
+        await _email.SendAsync(
             user.Email,
             "🎉 Welcome to CloneEbay - Account Created Successfully!",
             $"<h2>Hello {user.Username},</h2><p>Your account has been created successfully on CloneEbay!</p><p>You can now log in and explore our Payment & Shipping features.</p><p>Best regards,<br/><strong>CloneEbay Microservices Team</strong></p>",
-            ct);
+            default); // use default to avoid cancellation on exit
 
         var (token, expiresAt) = GenerateToken(user);
         return new AuthResultDto(user.Id, user.Username!, user.Email!, token, token, expiresAt);
@@ -102,6 +102,13 @@ public sealed class AuthService : IAuthService
             };
             _db.Users.Add(user);
             await _db.SaveChangesAsync(ct);
+
+            // Send welcome email on auto-provision
+            await _email.SendAsync(
+                user.Email,
+                "🎉 Welcome to CloneEbay - Account Created Successfully!",
+                $"<h2>Hello {user.Username},</h2><p>Your account has been created successfully on CloneEbay!</p><p>You can now log in and explore our Payment & Shipping features.</p><p>Best regards,<br/><strong>CloneEbay Microservices Team</strong></p>",
+                default); // use default to avoid cancellation on exit
         }
         else
         {
