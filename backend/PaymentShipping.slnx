@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="..\docker-compose.yml" />
+  </Folder>
+  <Project Path="PaymentShipping.Api\PaymentShipping.Api.csproj" />
+  <Project Path="PaymentShipping.Application\PaymentShipping.Application.csproj" />
+  <Project Path="PaymentShipping.Contracts\PaymentShipping.Contracts.csproj" />
+  <Project Path="PaymentShipping.Domain\PaymentShipping.Domain.csproj" />
+  <Project Path="PaymentShipping.Infrastructure\PaymentShipping.Infrastructure.csproj" />
+</Solution>
