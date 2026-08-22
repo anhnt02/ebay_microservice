@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using PaymentShipping.Domain.Entities;
 using PaymentShipping.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -19,19 +19,15 @@ public class ProductsController : ControllerBase
         var products = await _db.Products.ToListAsync();
         var items = products.Select(p => new
         {
-            p.Id,
-            p.Title,
-            p.Price,
-            p.Description,
-            p.Category,
-            Images = new[] { "https://picsum.photos/400" },
-            Seller = new { Username = "system" },
-            p.Status,
-            p.StockQuantity
+            p.Id, p.Title, p.Price, p.Description, p.Category,
+            Images = new[] { "https://picsum.photos/400" }, Seller = new { Username = "system" },
+            p.Status, p.StockQuantity
         });
-        
         return Ok(ApiResponse<object>.Ok(new { items, total = products.Count }, "", "Success"));
     }
+
+    [HttpGet("my")]
+    public async Task<IActionResult> GetMyProducts() => await GetProducts();
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetProduct(int id)
@@ -40,17 +36,32 @@ public class ProductsController : ControllerBase
         if (p == null) return NotFound();
         return Ok(ApiResponse<object>.Ok(new
         {
-            p.Id,
-            p.Title,
-            p.Price,
-            p.Description,
-            p.Category,
-            Images = new[] { "https://picsum.photos/400" },
-            Seller = new { Username = "system" },
-            p.Status,
-            p.StockQuantity
+            p.Id, p.Title, p.Price, p.Description, p.Category,
+            Images = new[] { "https://picsum.photos/400" }, Seller = new { Username = "system" },
+            p.Status, p.StockQuantity
         }, "", "Success"));
     }
+
+    [HttpPost]
+    public IActionResult CreateProduct([FromBody] object payload) => Ok(ApiResponse<object>.Ok(new { Id = 1 }, "", "Success"));
+
+    [HttpPut("{id}")]
+    public IActionResult UpdateProduct(int id, [FromBody] object payload) => Ok(ApiResponse<object>.Ok(new { Id = id }, "", "Success"));
+
+    [HttpPut("{id}/inventory")]
+    public IActionResult UpdateInventory(int id, [FromBody] object payload) => Ok(ApiResponse<object>.Ok(new { Id = id }, "", "Success"));
+
+    [HttpPatch("{id}/status")]
+    public IActionResult UpdateStatus(int id, [FromBody] object payload) => Ok(ApiResponse<object>.Ok(new { Id = id }, "", "Success"));
+
+    [HttpPost("{id}/images")]
+    public IActionResult UploadImages(int id) => Ok(ApiResponse<object>.Ok(new { Id = id }, "", "Success"));
+
+    [HttpDelete("{id}/images")]
+    public IActionResult DeleteImage(int id) => Ok(ApiResponse<object>.Ok(new { Id = id }, "", "Success"));
+
+    [HttpDelete("{id}")]
+    public IActionResult DeleteProduct(int id) => Ok(ApiResponse<object>.Ok(new { Id = id }, "", "Success"));
 }
 
 [ApiController]
