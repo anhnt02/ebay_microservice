@@ -20,17 +20,20 @@ public sealed class AuthService : IAuthService
     private readonly IConfiguration _config;
     private readonly ILogger<AuthService> _logger;
     private readonly ITransactionContextAccessor _txContext;
+    private readonly PaymentShipping.Application.Notifications.IEmailService _email;
 
     public AuthService(
         AppDbContext db,
         IConfiguration config,
         ILogger<AuthService> logger,
-        ITransactionContextAccessor txContext)
+        ITransactionContextAccessor txContext,
+        PaymentShipping.Application.Notifications.IEmailService email)
     {
         _db = db;
         _config = config;
         _logger = logger;
         _txContext = txContext;
+        _email = email;
     }
 
     public async Task<AuthResultDto> RegisterAsync(RegisterRequest request, CancellationToken ct = default)
@@ -64,6 +67,12 @@ public sealed class AuthService : IAuthService
         _logger.LogInformation(
             "Register succeeded | cid={cid} | tx={tx} | userId={userId}",
             _txContext.CorrelationId, _txContext.TransactionId, user.Id);
+
+        _ = _email.SendAsync(
+            user.Email,
+            "🎉 Welcome to CloneEbay - Account Created Successfully!",
+            $"<h2>Hello {user.Username},</h2><p>Your account has been created successfully on CloneEbay!</p><p>You can now log in and explore our Payment & Shipping features.</p><p>Best regards,<br/><strong>CloneEbay Microservices Team</strong></p>",
+            ct);
 
         var (token, expiresAt) = GenerateToken(user);
         return new AuthResultDto(user.Id, user.Username!, user.Email!, token, token, expiresAt);
