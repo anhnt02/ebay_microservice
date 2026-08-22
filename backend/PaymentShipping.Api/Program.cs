@@ -114,7 +114,24 @@ app.UseMiddleware<GlobalExceptionMiddleware>();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.EnsureCreated(); // Ensure created and seeded
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    var retryCount = 0;
+    while (true)
+    {
+        try
+        {
+            db.Database.EnsureCreated(); // Ensure created and seeded
+            logger.LogInformation("Database initialized successfully.");
+            break;
+        }
+        catch (Exception ex)
+        {
+            retryCount++;
+            logger.LogWarning(ex, "Failed to connect to database. Retrying {retryCount}/10...", retryCount);
+            if (retryCount >= 10) throw;
+            Thread.Sleep(3000);
+        }
+    }
 }
 
 if (app.Environment.IsDevelopment())
