@@ -69,3 +69,26 @@ public class CategoriesController : ControllerBase
         return Ok(ApiResponse<object>.Ok(categories, "", "Success"));
     }
 }
+
+[ApiController]
+[Route("api/[controller]")]
+public class StoresController : ControllerBase
+{
+    [HttpGet("me")]
+    public IActionResult GetMyStore()
+    {
+        return Ok(ApiResponse<object>.Ok(new { Id = 1, StoreName = "Mock Store", Description = "Mock Description" }, "", "Success"));
+    }
+
+    [HttpPost]
+    public IActionResult CreateStore([FromBody] object payload)
+    {
+        return Ok(ApiResponse<object>.Ok(new { Id = 1, StoreName = "Mock Store", Description = "Mock Description" }, "", "Success"));
+    }
+
+    [HttpPut("me")]
+    public IActionResult UpdateStore([FromBody] object payload)
+    {
+        return Ok(ApiResponse<object>.Ok(new { Id = 1, StoreName = "Mock Store", Description = "Mock Description" }, "", "Success"));
+    }
+}
