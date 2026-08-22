@@ -169,6 +169,37 @@ public class AppDbContext : DbContext
 
     private static void SeedData(ModelBuilder modelBuilder)
     {
+        // Seed default user
+        modelBuilder.Entity<User>().HasData(
+            new User
+            {
+                Id = 1,
+                Username = "anhnt",
+                Email = "sicano20@gmail.com",
+                PasswordHash = "$2a$11$eAKV2oQ6/gHkWK0c5d5/vOqvj1zS1lZ6Q3Q6Q6Q6Q6Q6Q6Q6Q6Q6Q", // dummy hash
+                FullName = "Anh Nguyen",
+                Phone = "0987654321",
+                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                IsActive = true
+            }
+        );
+
+        // Seed default address
+        modelBuilder.Entity<Address>().HasData(
+            new Address
+            {
+                Id = 1,
+                UserId = 1,
+                FullName = "Anh Nguyen",
+                Phone = "0987654321",
+                Street = "123 Le Loi",
+                City = "Hanoi",
+                Province = "Hanoi",
+                Country = "VN",
+                PostalCode = "100000"
+            }
+        );
+
         // Seed products for testing
         modelBuilder.Entity<Product>().HasData(
             new Product { Id = 1, Title = "iPhone 15 Pro", Description = "Apple iPhone 15 Pro 256GB", Price = 999.00m, Category = "Electronics", StockQuantity = 50, Status = "active" },
