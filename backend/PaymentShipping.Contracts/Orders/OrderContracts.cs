@@ -1,3 +1,5 @@
+using PaymentShipping.Contracts.Shipping;
+
 namespace PaymentShipping.Contracts.Orders;
 
 // ── Requests ─────────────────────────────────────────────────────
