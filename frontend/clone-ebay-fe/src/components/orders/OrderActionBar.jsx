@@ -18,9 +18,7 @@ const OrderActionBar = ({ order, isSeller, isBuyer, onOrderUpdated }) => {
 
   const validToCancel = isBuyer && order.status === 'PENDING_PAYMENT';
   
-  const latestPayment = order.payments && order.payments.length > 0
-    ? order.payments[order.payments.length - 1]
-    : {};
+  const latestPayment = order.latestPayment || {};
 
   const handleCancelClick = async () => {
     const isConfirmed = window.confirm('Are you sure you want to cancel this order?');

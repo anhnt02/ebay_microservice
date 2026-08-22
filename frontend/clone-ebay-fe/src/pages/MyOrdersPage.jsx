@@ -57,8 +57,7 @@ const MyOrdersPage = () => {
   };
 
   const getLatestPayment = (order) => {
-    if (!order.payments || !order.payments.length) return null;
-    return order.payments[order.payments.length - 1];
+    return order.latestPayment || null;
   };
 
   return (

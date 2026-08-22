@@ -169,7 +169,7 @@ const OrdersPage = () => {
         ) : (
           <div className="orders-list">
             {filteredOrders.map((order) => {
-              const latestPayment = getLatestPayment(order.payments);
+              const latestPayment = order.latestPayment || null;
               const canPay = order.status === 'PENDING_PAYMENT';
               const canCancel =
                 order.status === 'PENDING_PAYMENT' || order.status === 'CONFIRMED';

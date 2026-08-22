@@ -121,7 +121,7 @@ const displayTotal = viewAsSeller
                changeCount={order.addressChangeCount}
                lastChangedAt={order.lastAddressChangedAt}
             />
-            <PaymentHistoryCard payments={order.payments || []} />
+            <PaymentHistoryCard payments={order.latestPayment ? [{ ...order.latestPayment, method: order.latestPayment.provider }] : []} />
             <ShippingInfoCard shippings={order.shippings} orderId={order.id} orderStatus={order.status} />
          </div>
       </div>

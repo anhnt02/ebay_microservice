@@ -10,11 +10,10 @@ const PayPalButtonsSection = ({ order, onPaymentSuccess }) => {
 
   if (!order || order.status !== 'PENDING_PAYMENT') return null;
 
-  const latestPayment = order.payments && order.payments.length > 0
-    ? order.payments[order.payments.length - 1]
-    : null;
+  const method = order.paymentMethod?.toUpperCase();
+  if (method !== 'PAYPAL') return null;
 
-  if (latestPayment?.method !== 'PAYPAL') return null;
+  const amountToPay = order.latestPayment?.amount || order.totalPrice;
 
   const initialOptions = {
     // using VITE_ prefix for Vite environment variables
@@ -58,7 +57,7 @@ const PayPalButtonsSection = ({ order, onPaymentSuccess }) => {
       <div className="paypal-payment-info">
         <h4 className="paypal-title">Complete your payment securely</h4>
         <div className="paypal-details">
-          <span>Amount due: <strong>{formatCurrency(latestPayment.amount || order.totalPrice)}</strong></span>
+          <span>Amount due: <strong>{formatCurrency(amountToPay)}</strong></span>
           <span className="payment-method-badge">PayPal</span>
         </div>
       </div>
