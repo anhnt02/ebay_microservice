@@ -65,7 +65,7 @@ public sealed class OrdersController : BaseController
     [HttpPost("{id}/pay")]
     public IActionResult PayOrder(int id)
     {
-        return Ok(ApiResponse<object>.Ok(new { Id = id, Status = "paid", Message = "Payment simulated successfully" }, CurrentCorrelationId, "Paid"));
+        return Ok(ApiResponse<object>.Ok(new { Id = id, Status = "paid", Message = "Payment simulated successfully", PaypalOrderId = $"PAYPAL-{Guid.NewGuid()}" }, CurrentCorrelationId, "Paid"));
     }
 
     [HttpPost("{id}/pay/capture")]

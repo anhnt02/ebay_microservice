@@ -94,16 +94,18 @@ public sealed class ShippingService : IShippingService
         }
 
         // Add initial tracking event
-        _db.ShippingTrackingEvents.Add(new ShippingTrackingEvent
+        var trackingEvent = new ShippingTrackingEvent
         {
-            ShippingInfoId = shipping.Id == 0 ? 0 : shipping.Id,   // will be set after save
+            ShippingInfo = shipping,
             Status = ShipmentStatuses.InTransit,
             Description = "Shipment registered and picked up",
             Location = "Warehouse",
             Provider = "SIMSHIP",
             EventTime = DateTime.UtcNow,
             CreatedAt = DateTime.UtcNow
-        });
+        };
+        _db.ShippingTrackingEvents.Add(trackingEvent);
+        shipping.TrackingEvents.Add(trackingEvent);
 
         var oldStatus = order.Status;
         order.Status = OrderStatuses.Shipped;
@@ -160,7 +162,7 @@ public sealed class ShippingService : IShippingService
         }
 
         // Add tracking event
-        _db.ShippingTrackingEvents.Add(new ShippingTrackingEvent
+        var trackingEvent = new ShippingTrackingEvent
         {
             ShippingInfoId = shipping.Id,
             Status = normalizedStatus,
@@ -169,7 +171,9 @@ public sealed class ShippingService : IShippingService
             Provider = "SIMSHIP",
             EventTime = req.EventTime ?? DateTime.UtcNow,
             CreatedAt = DateTime.UtcNow
-        });
+        };
+        _db.ShippingTrackingEvents.Add(trackingEvent);
+        shipping.TrackingEvents.Add(trackingEvent);
 
         await _db.SaveChangesAsync(ct);
 

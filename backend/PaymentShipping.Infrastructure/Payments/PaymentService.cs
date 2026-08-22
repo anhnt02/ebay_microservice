@@ -169,18 +169,22 @@ public sealed class PaymentService : IPaymentService
     private async Task MarkCapturedAsync(
         Order order, Payment payment, string transactionId, string? rawResponse, CancellationToken ct)
     {
-        await using var tx = await _db.Database.BeginTransactionAsync(ct);
+        var strategy = _db.Database.CreateExecutionStrategy();
+        await strategy.ExecuteAsync(async () =>
+        {
+            await using var tx = await _db.Database.BeginTransactionAsync(ct);
 
-        payment.Status = PaymentStatuses.Captured;
-        payment.TransactionId = transactionId;
-        payment.ProviderRawResponse = rawResponse?[..Math.Min(rawResponse.Length, 4000)];
-        payment.PaidAt = DateTime.UtcNow;
+            payment.Status = PaymentStatuses.Captured;
+            payment.TransactionId = transactionId;
+            payment.ProviderRawResponse = rawResponse?[..Math.Min(rawResponse.Length, 4000)];
+            payment.PaidAt = DateTime.UtcNow;
 
-        order.Status = OrderStatuses.Paid;
-        order.PaidAt = DateTime.UtcNow;
+            order.Status = OrderStatuses.Paid;
+            order.PaidAt = DateTime.UtcNow;
 
-        await _db.SaveChangesAsync(ct);
-        await tx.CommitAsync(ct);
+            await _db.SaveChangesAsync(ct);
+            await tx.CommitAsync(ct);
+        });
 
         _logger.LogInformation(
             "Payment captured | cid={cid} | tx={tx} | orderId={id} | transactionId={tid}",
