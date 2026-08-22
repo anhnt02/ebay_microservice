@@ -42,17 +42,51 @@ public class ProductsController : ControllerBase
         }, "", "Success"));
     }
 
+    public record CreateUpdateProductDto(string Title, decimal Price, string Description, string Category);
+    public record UpdateInventoryDto(int Quantity);
+    public record UpdateStatusDto(string Status);
+
     [HttpPost]
-    public IActionResult CreateProduct([FromBody] object payload) => Ok(ApiResponse<object>.Ok(new { Id = 1 }, "", "Success"));
+    public async Task<IActionResult> CreateProduct([FromBody] CreateUpdateProductDto payload)
+    {
+        var p = new Product { Title = payload.Title, Price = payload.Price, Description = payload.Description, Category = payload.Category };
+        _db.Products.Add(p);
+        await _db.SaveChangesAsync();
+        return Ok(ApiResponse<object>.Ok(new { Id = p.Id }, "", "Success"));
+    }
 
     [HttpPut("{id}")]
-    public IActionResult UpdateProduct(int id, [FromBody] object payload) => Ok(ApiResponse<object>.Ok(new { Id = id }, "", "Success"));
+    public async Task<IActionResult> UpdateProduct(int id, [FromBody] CreateUpdateProductDto payload)
+    {
+        var p = await _db.Products.FindAsync(id);
+        if (p != null) {
+            p.Title = payload.Title; p.Price = payload.Price; p.Description = payload.Description; p.Category = payload.Category;
+            await _db.SaveChangesAsync();
+        }
+        return Ok(ApiResponse<object>.Ok(new { Id = id }, "", "Success"));
+    }
 
     [HttpPut("{id}/inventory")]
-    public IActionResult UpdateInventory(int id, [FromBody] object payload) => Ok(ApiResponse<object>.Ok(new { Id = id }, "", "Success"));
+    public async Task<IActionResult> UpdateInventory(int id, [FromBody] UpdateInventoryDto payload)
+    {
+        var p = await _db.Products.FindAsync(id);
+        if (p != null) {
+            p.StockQuantity = payload.Quantity;
+            await _db.SaveChangesAsync();
+        }
+        return Ok(ApiResponse<object>.Ok(new { Id = id }, "", "Success"));
+    }
 
     [HttpPatch("{id}/status")]
-    public IActionResult UpdateStatus(int id, [FromBody] object payload) => Ok(ApiResponse<object>.Ok(new { Id = id }, "", "Success"));
+    public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateStatusDto payload)
+    {
+        var p = await _db.Products.FindAsync(id);
+        if (p != null) {
+            p.Status = payload.Status;
+            await _db.SaveChangesAsync();
+        }
+        return Ok(ApiResponse<object>.Ok(new { Id = id }, "", "Success"));
+    }
 
     [HttpPost("{id}/images")]
     public IActionResult UploadImages(int id) => Ok(ApiResponse<object>.Ok(new { Id = id }, "", "Success"));
@@ -61,7 +95,15 @@ public class ProductsController : ControllerBase
     public IActionResult DeleteImage(int id) => Ok(ApiResponse<object>.Ok(new { Id = id }, "", "Success"));
 
     [HttpDelete("{id}")]
-    public IActionResult DeleteProduct(int id) => Ok(ApiResponse<object>.Ok(new { Id = id }, "", "Success"));
+    public async Task<IActionResult> DeleteProduct(int id)
+    {
+        var p = await _db.Products.FindAsync(id);
+        if (p != null) {
+            _db.Products.Remove(p);
+            await _db.SaveChangesAsync();
+        }
+        return Ok(ApiResponse<object>.Ok(new { Id = id }, "", "Success"));
+    }
 }
 
 [ApiController]
