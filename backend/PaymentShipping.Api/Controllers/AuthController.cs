@@ -24,4 +24,14 @@ public sealed class AuthController : BaseController
         var result = await _auth.LoginAsync(req, ct);
         return Ok(ApiResponse<AuthResultDto>.Ok(result, CurrentCorrelationId, "Login successful"));
     }
+
+    [HttpGet("me")]
+    public IActionResult GetMe()
+    {
+        var userId = CurrentUserId;
+        return Ok(ApiResponse<object>.Ok(new { id = userId, username = User.Identity?.Name ?? "user", email = "user@example.com", role = "buyer" }, CurrentCorrelationId, "User fetched"));
+    }
+
+    [HttpPost("logout")]
+    public IActionResult Logout() => Ok(ApiResponse<object>.Ok(new { }, CurrentCorrelationId, "Logged out"));
 }
