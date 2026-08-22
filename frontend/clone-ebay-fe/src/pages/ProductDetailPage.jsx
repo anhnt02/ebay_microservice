@@ -346,20 +346,21 @@ const ProductDetailPage = () => {
   const isEnded = product.status === 'ENDED' || product.isEnded;
 
   const canBuy =
+    !isOwner &&
     !product.isAuction &&
     product.inStock &&
     !isOut &&
     !isInactive &&
     !isSold &&
-    !isOwner;
+    !isEnded;
 
   const canBid =
+    !isOwner &&
     product.isAuction &&
     !isEnded &&
     !isInactive &&
     !isSold &&
-    !isOut &&
-    !isOwner;
+    !isOut;
 
   const totalPrice = Number(product.price || 0) * Number(quantity || 1);
 
@@ -579,7 +580,9 @@ const ProductDetailPage = () => {
                     onClick={handleBuyNow}
                     disabled={!canBuy || buyingNow}
                   >
-                    {!canBuy
+                    {isOwner
+                      ? 'This is your product'
+                      : !canBuy
                       ? 'Currently Unavailable'
                       : buyingNow
                       ? 'Processing...'

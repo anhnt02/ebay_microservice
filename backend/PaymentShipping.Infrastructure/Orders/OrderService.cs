@@ -153,15 +153,19 @@ public sealed class OrderService : IOrderService
             // Add order items
             foreach (var item in req.Items)
             {
+                var product = products[item.ProductId];
+                
+                if (product.SellerId == buyerId)
+                    throw new ValidationException($"You cannot buy your own product (Item #{item.ProductId})", "CANNOT_BUY_OWN_PRODUCT");
+
                 _db.OrderItems.Add(new OrderItem
                 {
                     OrderId = order.Id,
-                    ProductId = products[item.ProductId].Id,
+                    ProductId = product.Id,
                     Quantity = item.Quantity,
-                    UnitPrice = products[item.ProductId].Price ?? 0m
+                    UnitPrice = product.Price ?? 0m
                 });
 
-                var product = products[item.ProductId];
                 product.StockQuantity -= item.Quantity;
                 if (product.StockQuantity <= 0)
                     product.Status = "out_of_stock";
@@ -221,6 +225,9 @@ public sealed class OrderService : IOrderService
                     Status = "active"
                 };
             }
+            
+            if (products[item.ProductId].SellerId == buyerId)
+                throw new ValidationException($"You cannot buy your own product (Item #{item.ProductId})", "CANNOT_BUY_OWN_PRODUCT");
         }
 
         Address? address = null;

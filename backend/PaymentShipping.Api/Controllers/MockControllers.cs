@@ -20,7 +20,7 @@ public class ProductsController : BaseController
         var items = products.Select(p => new
         {
             p.Id, p.Title, p.Price, p.Description, p.Category,
-            Images = new[] { "https://picsum.photos/400" }, Seller = new { Username = "system" },
+            Images = new[] { "https://picsum.photos/400" }, Seller = new { Id = p.SellerId, Username = "Seller" },
             Status = string.IsNullOrWhiteSpace(p.Status) ? "active" : p.Status,
             StockQuantity = p.StockQuantity > 0 ? p.StockQuantity : 50,
             AvailableQuantity = p.StockQuantity > 0 ? p.StockQuantity : 50,
@@ -42,7 +42,7 @@ public class ProductsController : BaseController
         return Ok(ApiResponse<object>.Ok(new
         {
             p.Id, p.Title, p.Price, p.Description, p.Category,
-            Images = new[] { "https://picsum.photos/400" }, Seller = new { Username = "system" },
+            Images = new[] { "https://picsum.photos/400" }, Seller = new { Id = p.SellerId, Username = "Seller" },
             Status = string.IsNullOrWhiteSpace(p.Status) ? "active" : p.Status,
             StockQuantity = p.StockQuantity > 0 ? p.StockQuantity : 50,
             AvailableQuantity = p.StockQuantity > 0 ? p.StockQuantity : 50,
@@ -223,8 +223,11 @@ public class AddressesController : ControllerBase
 
 [ApiController]
 [Route("api/[controller]")]
-public class SellerController : ControllerBase
+public class SellerController : BaseController
 {
+    private readonly AppDbContext _db;
+    public SellerController(AppDbContext db) => _db = db;
+
     [HttpGet("wallet")]
     public IActionResult GetWallet()
     {
@@ -249,26 +252,79 @@ public class SellerController : ControllerBase
     }
 
     [HttpGet("orders")]
-    public IActionResult GetSellerOrders([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    public async Task<IActionResult> GetSellerOrders([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
-        var orders = new[]
+        var query = _db.Orders
+            .AsNoTracking()
+            .Include(o => o.Buyer)
+            .Include(o => o.Address)
+            .Include(o => o.OrderItems).ThenInclude(oi => oi.Product)
+            .Include(o => o.Payments)
+            .Include(o => o.ShippingInfo).ThenInclude(s => s!.TrackingEvents)
+            .Where(o => o.OrderItems.Any(oi => oi.Product != null && oi.Product.SellerId == CurrentUserId))
+            .OrderByDescending(o => o.OrderDate);
+
+        var total = await query.CountAsync();
+        var orders = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+
+        // We can just map them anonymously matching the frontend shape, or use the exact OrderDto shape.
+        // Frontend expects: { id, status, orderDate, buyerName, items: [ { id, productId, sellerId, productTitle, quantity, unitPrice, lineTotal } ], shippingFee }
+        var items = orders.Select(o => new
         {
-            new { Id = 1, Status = "processing", TotalPrice = 999.00m, OrderDate = DateTime.UtcNow.AddDays(-1), Buyer = new { Username = "buyer1" } }
-        };
-        return Ok(ApiResponse<object>.Ok(new { items = orders, page, pageSize, total = 1 }, "", "Success"));
+            id = o.Id,
+            status = o.Status,
+            orderDate = o.OrderDate,
+            buyerName = o.Buyer?.FullName ?? o.Buyer?.Username ?? "Guest",
+            shippingFee = o.ShippingFee,
+            items = o.OrderItems.Select(oi => new 
+            {
+                id = oi.Id,
+                productId = oi.ProductId,
+                sellerId = oi.Product?.SellerId ?? 2,
+                productTitle = oi.Product?.Title,
+                quantity = oi.Quantity,
+                unitPrice = oi.UnitPrice,
+                lineTotal = (oi.Product?.Price ?? 0m) * oi.Quantity
+            }).ToList()
+        });
+
+        return Ok(ApiResponse<object>.Ok(new { items, page, pageSize, total }, "", "Success"));
     }
 
     [HttpGet("orders/{orderId}")]
-    public IActionResult GetOrderForSeller(int orderId)
+    public async Task<IActionResult> GetOrderForSeller(int orderId)
     {
-        return Ok(ApiResponse<object>.Ok(new
+        var o = await _db.Orders
+            .AsNoTracking()
+            .Include(o => o.Buyer)
+            .Include(o => o.Address)
+            .Include(o => o.OrderItems).ThenInclude(oi => oi.Product)
+            .Include(o => o.Payments)
+            .Include(o => o.ShippingInfo).ThenInclude(s => s!.TrackingEvents)
+            .FirstOrDefaultAsync(x => x.Id == orderId);
+
+        if (o == null) return NotFound();
+
+        var result = new
         {
-            Id = orderId,
-            Status = "processing",
-            TotalPrice = 999.00m,
-            OrderDate = DateTime.UtcNow.AddDays(-1),
-            Buyer = new { Username = "buyer1" }
-        }, "", "Success"));
+            id = o.Id,
+            status = o.Status,
+            orderDate = o.OrderDate,
+            buyerName = o.Buyer?.FullName ?? o.Buyer?.Username ?? "Guest",
+            shippingFee = o.ShippingFee,
+            items = o.OrderItems.Select(oi => new 
+            {
+                id = oi.Id,
+                productId = oi.ProductId,
+                sellerId = oi.Product?.SellerId ?? 2,
+                productTitle = oi.Product?.Title,
+                quantity = oi.Quantity,
+                unitPrice = oi.UnitPrice,
+                lineTotal = (oi.Product?.Price ?? 0m) * oi.Quantity
+            }).ToList(),
+            shippingInfo = o.ShippingInfo
+        };
+        return Ok(ApiResponse<object>.Ok(result, "", "Success"));
     }
 
     [HttpPost("orders/{orderId}/processing")]
