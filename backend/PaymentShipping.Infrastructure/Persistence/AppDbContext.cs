@@ -169,16 +169,27 @@ public class AppDbContext : DbContext
 
     private static void SeedData(ModelBuilder modelBuilder)
     {
-        // Seed default user
+        // Seed default buyer & seller
         modelBuilder.Entity<User>().HasData(
             new User
             {
                 Id = 1,
                 Username = "anhnt",
                 Email = "sicano20@gmail.com",
-                PasswordHash = "$2a$11$eAKV2oQ6/gHkWK0c5d5/vOqvj1zS1lZ6Q3Q6Q6Q6Q6Q6Q6Q6Q6Q6Q", // dummy hash
-                FullName = "Anh Nguyen",
+                PasswordHash = "dummy_hash",
+                FullName = "Anh Nguyen (Buyer)",
                 Phone = "0987654321",
+                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                IsActive = true
+            },
+            new User
+            {
+                Id = 2,
+                Username = "seller_store",
+                Email = "seller@ebay.com",
+                PasswordHash = "dummy_hash",
+                FullName = "Official Store (Seller)",
+                Phone = "0912345678",
                 CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
                 IsActive = true
             }
