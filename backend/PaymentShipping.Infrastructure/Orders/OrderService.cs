@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using PaymentShipping.Contracts.Shipping;
 using Microsoft.Extensions.Logging;
 using PaymentShipping.Application.Common;
 using PaymentShipping.Application.Orders;
