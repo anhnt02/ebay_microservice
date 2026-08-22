@@ -66,7 +66,7 @@ public sealed class AuthService : IAuthService
             _txContext.CorrelationId, _txContext.TransactionId, user.Id);
 
         var (token, expiresAt) = GenerateToken(user);
-        return new AuthResultDto(user.Id, user.Username!, user.Email!, token, expiresAt);
+        return new AuthResultDto(user.Id, user.Username!, user.Email!, token, token, expiresAt);
     }
 
     public async Task<AuthResultDto> LoginAsync(LoginRequest request, CancellationToken ct = default)
@@ -88,7 +88,7 @@ public sealed class AuthService : IAuthService
             _txContext.CorrelationId, _txContext.TransactionId, user.Id);
 
         var (token, expiresAt) = GenerateToken(user);
-        return new AuthResultDto(user.Id, user.Username!, user.Email!, token, expiresAt);
+        return new AuthResultDto(user.Id, user.Username!, user.Email!, token, token, expiresAt);
     }
 
     private (string Token, DateTime ExpiresAt) GenerateToken(User user)

@@ -18,5 +18,6 @@ public record AuthResultDto(
     string Username,
     string Email,
     string Token,
+    string AccessToken,
     DateTime ExpiresAt
 );
