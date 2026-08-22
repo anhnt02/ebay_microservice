@@ -8,7 +8,7 @@ namespace PaymentShipping.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class ProductsController : ControllerBase
+public class ProductsController : BaseController
 {
     private readonly AppDbContext _db;
     public ProductsController(AppDbContext db) => _db = db;
@@ -52,15 +52,15 @@ public class ProductsController : ControllerBase
         }, "", "Success"));
     }
 
-    public record CreateUpdateProductDto(string Title, decimal Price, string Description, string Category, int? Quantity, int? StockQuantity);
+    public record CreateUpdateProductDto(string? Title, decimal? Price, string? Description, string? Category, int? Quantity, int? StockQuantity);
     public record UpdateInventoryDto(int Quantity);
-    public record UpdateStatusDto(string Status);
+    public record UpdateStatusDto(string? Status);
 
     [HttpPost]
     public async Task<IActionResult> CreateProduct([FromBody] CreateUpdateProductDto payload)
     {
         var qty = payload.Quantity ?? payload.StockQuantity ?? 50;
-        var p = new Product { Title = payload.Title, Price = payload.Price, Description = payload.Description, Category = payload.Category, StockQuantity = qty, Status = "active" };
+        var p = new Product { SellerId = CurrentUserId, Title = payload.Title, Price = payload.Price, Description = payload.Description, Category = payload.Category, StockQuantity = qty, Status = "active" };
         _db.Products.Add(p);
         await _db.SaveChangesAsync();
         return Ok(ApiResponse<object>.Ok(new { Id = p.Id, AvailableQuantity = qty, StockQuantity = qty }, "", "Success"));
